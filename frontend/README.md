@@ -1,16 +1,29 @@
-# React + Vite
+# 🎊 Full-Stack Event Decoration Portfolio
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+An advanced portfolio management system for event decorators, built using **Spring Boot** and **React**. This application allows decorators to showcase their work in categories like Weddings, Birthdays, and Openings, while providing a direct lead generation tool via WhatsApp.
 
-Currently, two official plugins are available:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
 
-## React Compiler
+## 🛠 Features
+* **Dynamic Portfolio:** Filter work by categories (Wedding, Birthday, Balloon Decor).
+* **Admin Control:** Create and Delete portfolio items in real-time.
+* **Lead Generation:** Integrated WhatsApp button for instant client inquiries.
+* **Full-Stack Sync:** React frontend communicates with a Java Spring Boot REST API.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 💻 Tech Stack
+* **Frontend:** React.js, Vite, Axios, CSS3
+* **Backend:** Java 17, Spring Boot, Spring Data JPA
+* **Database:** H2 (In-memory) / MySQL (Production)
 
-## Expanding the ESLint configuration
+## 🚀 How to Run Locally
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### 1. Backend
+- Navigate to the root folder.
+- Run: `./mvnw spring-boot:run`
+- The API will be available at `http://localhost:8081`
+
+### 2. Frontend
+- Navigate to the `frontend` folder.
+- Run: `npm install`
+- Run: `npm run dev`
+- The UI will be available at `http://localhost:5173`
