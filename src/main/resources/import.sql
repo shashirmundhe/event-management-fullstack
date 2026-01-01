@@ -1,0 +1,3 @@
+INSERT INTO event (title, category, image_url, description) VALUES ('Blue Birthday Theme', 'Birthday', 'https://images.unsplash.com/photo-1530103862676-fa8c9d34b68e', 'Beautiful blue balloons for kids.');
+INSERT INTO event (title, category, image_url, description) VALUES ('Grand Wedding Stage', 'Wedding', 'https://images.unsplash.com/photo-1519741497674-611481863552', 'Royal floral decoration for weddings.');
+INSERT INTO event (title, category, image_url, description) VALUES ('Neon Name Board', 'Name Opening', 'https://images.unsplash.com/photo-1563245372-f21724e3856d', 'Modern neon lighting for office openings.');
