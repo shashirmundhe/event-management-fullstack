@@ -1,179 +1,80 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import './App.css';
 
-// --- 1. CONFIGURATION ---
 const API_URL = "http://localhost:8081/api/events";
-
-// !!! FILL THESE TWO FROM YOUR CLOUDINARY DASHBOARD !!!
-const CLOUD_NAME = "YOUR_CLOUD_NAME";
-const UPLOAD_PRESET = "YOUR_UNSIGNED_PRESET";
+const BASE_URL = "http://localhost:8081";
 
 function App() {
   const [events, setEvents] = useState([]);
-  const [filter, setFilter] = useState('All');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [newEvent, setNewEvent] = useState({ title: '', category: '', imageUrl: '', description: '' });
-
-  const [loading, setLoading] = useState(true);
-  const [uploading, setUploading] = useState(false);
+  const [view, setView] = useState('gallery'); // Toggle between gallery and admin
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [adminPassword, setAdminPassword] = useState('');
+  const [newEvent, setNewEvent] = useState({ title: '', category: '', description: '', file: null });
 
-  const loadData = () => {
-    setLoading(true);
-    axios.get(API_URL)
-      .then(res => { setEvents(res.data); setLoading(false); })
-      .catch(err => { console.error("Backend offline!", err); setLoading(false); });
+  useEffect(() => { fetchEvents(); }, []);
+
+  const fetchEvents = () => {
+    axios.get(API_URL).then(res => setEvents(res.data));
   };
 
-  useEffect(() => { loadData(); }, []);
-
-  // --- 2. IMAGE UPLOAD LOGIC ---
-  const handleImageUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('upload_preset', UPLOAD_PRESET);
-
-    setUploading(true);
-    try {
-      // Direct call to Cloudinary API
-      const response = await axios.post(
-        `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
-        formData
-      );
-      setNewEvent({ ...newEvent, imageUrl: response.data.secure_url });
-      setUploading(false);
-      alert("Image uploaded to cloud successfully!");
-    } catch (error) {
-      console.error("Cloudinary Error:", error.response?.data || error.message);
-      setUploading(false);
-      alert("Upload failed. Check if your Preset is set to 'Unsigned' in Cloudinary Settings.");
-    }
-  };
-
-  // --- 3. ACTIONS ---
-  const handleLogin = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (adminPassword === "admin123") { setIsLoggedIn(true); setAdminPassword(''); }
-    else { alert("Incorrect Admin Password!"); }
-  };
+    const data = new FormData();
+    data.append('title', newEvent.title);
+    data.append('category', newEvent.category);
+    data.append('description', newEvent.description);
+    data.append('file', newEvent.file);
 
-  const handleAdd = (e) => {
-    e.preventDefault();
-    if (!newEvent.imageUrl) return alert("Please upload an image first!");
-
-    axios.post(API_URL, newEvent).then(() => {
-      loadData();
-      setNewEvent({ title: '', category: '', imageUrl: '', description: '' });
-      alert("Event added to gallery!");
-    });
-  };
-
-  const handleDelete = (id) => {
-    if (window.confirm("Delete this from your portfolio?")) {
-      axios.delete(`${API_URL}/${id}`).then(() => loadData());
-    }
-  };
-
-  const handleWhatsApp = (title) => {
-    const myNumber = "918956776400";
-    const msg = `Hi! I'm interested in your ${title} decoration. Can you share more details?`;
-    window.open(`https://wa.me/${myNumber}?text=${encodeURIComponent(msg)}`, "_blank");
+    await axios.post(API_URL, data);
+    alert("Project Published!");
+    fetchEvents();
+    setView('gallery');
   };
 
   return (
-    <div style={{ backgroundColor: '#f4f7f6', minHeight: '100vh', padding: '20px', fontFamily: 'Segoe UI' }}>
-
-      {/* Logout */}
-      <div style={{ textAlign: 'right', marginBottom: '10px' }}>
-        {isLoggedIn && <button onClick={() => setIsLoggedIn(false)} style={{ color: '#e74c3c', border: 'none', background: 'none', cursor: 'pointer', fontWeight: 'bold' }}>Logout Admin</button>}
-      </div>
-
-      <h1 style={{ textAlign: 'center', color: '#2c3e50', marginBottom: '10px' }}>Bliss Events & Decor</h1>
-      <p style={{ textAlign: 'center', color: '#7f8c8d', marginBottom: '30px' }}>Professional Portfolio Management</p>
-
-      {/* --- ADMIN FORM --- */}
-      {isLoggedIn && (
-        <div style={{ maxWidth: '600px', margin: '0 auto 40px auto', background: '#fff', padding: '25px', borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}>
-          <h3 style={{ marginTop: 0, textAlign: 'center' }}>Upload New Work</h3>
-          <form onSubmit={handleAdd} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-            <input style={{ padding: '12px' }} type="text" placeholder="Event Title" value={newEvent.title} onChange={e => setNewEvent({ ...newEvent, title: e.target.value })} required />
-
-            <select style={{ padding: '12px' }} value={newEvent.category} onChange={e => setNewEvent({ ...newEvent, category: e.target.value })} required>
-              <option value="">Select Category</option>
-              <option value="Wedding">Wedding</option>
-              <option value="Birthday">Birthday</option>
-              <option value="Balloon Decor">Balloon Decor</option>
-              <option value="Name Opening">Name Opening</option>
-            </select>
-
-            {/* File Picker */}
-            <div style={{ border: '2px dashed #3498db', padding: '20px', borderRadius: '8px', textAlign: 'center', backgroundColor: '#f9fcff' }}>
-              <p style={{ margin: '0 0 10px 0', fontWeight: 'bold' }}>Step 1: Select Photo</p>
-              <input type="file" onChange={handleImageUpload} accept="image/*" />
-              {uploading && <p style={{ color: '#3498db' }}>⬆️ Uploading to cloud...</p>}
-              {newEvent.imageUrl && <p style={{ color: '#2ecc71' }}>✅ Image ready to publish!</p>}
-            </div>
-
-            <textarea style={{ padding: '12px', minHeight: '80px' }} placeholder="Description" value={newEvent.description} onChange={e => setNewEvent({ ...newEvent, description: e.target.value })} required />
-
-            <button
-              disabled={uploading || !newEvent.imageUrl}
-              style={{
-                padding: '15px',
-                background: (uploading || !newEvent.imageUrl) ? '#ccc' : '#2ecc71',
-                color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold'
-              }}
-              type="submit"
-            >
-              Step 2: Publish to Gallery
-            </button>
-          </form>
+    <div className="app-container">
+      <nav className="navbar">
+        <div className="brand">TOM & JERRY EVENTS 4008</div>
+        <div className="menu">
+          <button onClick={() => setView('gallery')}>Portfolio</button>
+          <button onClick={() => setView('admin')} className="admin-btn">Admin Suite</button>
         </div>
-      )}
+      </nav>
 
-      {/* --- SEARCH & FILTERS --- */}
-      <div style={{ maxWidth: '700px', margin: '0 auto 25px auto' }}>
-        <input type="text" placeholder="🔍 Search decorations..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} style={{ width: '100%', padding: '15px 25px', borderRadius: '30px', border: '1px solid #ddd', fontSize: '16px', outline: 'none' }} />
-      </div>
-
-      <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginBottom: '40px', flexWrap: 'wrap' }}>
-        {['All', 'Wedding', 'Birthday', 'Balloon Decor', 'Name Opening'].map(cat => (
-          <button key={cat} onClick={() => setFilter(cat)} style={{ padding: '10px 22px', borderRadius: '25px', border: 'none', background: filter === cat ? '#3498db' : '#fff', color: filter === cat ? 'white' : '#3498db', cursor: 'pointer', fontWeight: 'bold' }}>{cat}</button>
-        ))}
-      </div>
-
-      {/* --- GALLERY --- */}
-      {loading ? <p style={{ textAlign: 'center' }}>🔄 Connecting to Gallery...</p> : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '30px', maxWidth: '1200px', margin: '0 auto' }}>
-          {events
-            .filter(item => (filter === 'All' || item.category === filter) && (item.title.toLowerCase().includes(searchTerm.toLowerCase())))
-            .map(item => (
-              <div key={item.id} style={{ background: '#fff', borderRadius: '15px', overflow: 'hidden', boxShadow: '0 4px 15px rgba(0,0,0,0.1)' }}>
-                <img src={item.imageUrl} style={{ width: '100%', height: '240px', objectFit: 'cover' }} alt="work" />
-                <div style={{ padding: '20px' }}>
-                  <span style={{ fontSize: '11px', background: '#e1f5fe', color: '#0288d1', padding: '4px 10px', borderRadius: '10px', fontWeight: 'bold' }}>{item.category}</span>
-                  <h4 style={{ margin: '15px 0 5px 0' }}>{item.title}</h4>
-                  <p style={{ fontSize: '14px', color: '#666' }}>{item.description}</p>
-                  <button onClick={() => handleWhatsApp(item.title)} style={{ width: '100%', background: '#25D366', color: 'white', border: 'none', padding: '12px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', marginTop: '10px' }}>Inquire on WhatsApp</button>
-                  {isLoggedIn && <button onClick={() => handleDelete(item.id)} style={{ width: '100%', background: 'none', color: '#ff7675', border: '1px solid #ff7675', padding: '8px', borderRadius: '8px', cursor: 'pointer', marginTop: '10px' }}>Remove</button>}
+      {view === 'gallery' ? (
+        <section className="gallery">
+          <header className="hero">
+            <h1>Luxury Decor & Event Planning</h1>
+            <p>We create memories that last a lifetime.</p>
+          </header>
+          <div className="grid">
+            {events.map(item => (
+              <div key={item.id} className="card">
+                <img src={`${BASE_URL}${item.imageUrl}`} alt={item.title} />
+                <div className="card-info">
+                  <h3>{item.title}</h3>
+                  <p>{item.description}</p>
+                  <button onClick={() => window.open(`https://wa.me/918956776400`)}>Inquire Now</button>
                 </div>
               </div>
             ))}
-        </div>
-      )}
-
-      {/* --- ADMIN LOGIN --- */}
-      {!isLoggedIn && (
-        <div style={{ marginTop: '100px', textAlign: 'center', borderTop: '1px solid #ddd', padding: '40px' }}>
-          <form onSubmit={handleLogin}>
-            <input type="password" placeholder="Admin Password" value={adminPassword} onChange={(e) => setAdminPassword(e.target.value)} style={{ padding: '10px', borderRadius: '8px', border: '1px solid #ccc' }} />
-            <button type="submit" style={{ marginLeft: '10px', padding: '10px 20px', borderRadius: '8px', background: '#2c3e50', color: 'white' }}>Login</button>
+          </div>
+        </section>
+      ) : (
+        <section className="admin-suite">
+          <h2>Management Dashboard</h2>
+          <form onSubmit={handleSubmit} className="upload-form">
+            <input type="text" placeholder="Title" onChange={e => setNewEvent({ ...newEvent, title: e.target.value })} required />
+            <select onChange={e => setNewEvent({ ...newEvent, category: e.target.value })} required>
+              <option value="">Category</option>
+              <option value="Wedding">Wedding</option>
+              <option value="Corporate">Corporate</option>
+            </select>
+            <input type="file" onChange={e => setNewEvent({ ...newEvent, file: e.target.files[0] })} required />
+            <textarea placeholder="Description" onChange={e => setNewEvent({ ...newEvent, description: e.target.value })}></textarea>
+            <button type="submit">Upload to Local System</button>
           </form>
-        </div>
+        </section>
       )}
     </div>
   );
